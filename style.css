@@ -1,0 +1,70 @@
+/* Main console container */
+  #webRInteractions {
+    display: none;
+    background-color: #444; /* Dark background */
+    color: #F8F8F2 ;           /* Light text */
+    font-family: 'Consolas', 'Courier New', monospace;
+    border: 1px solid #555;
+    border-radius: 5px;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  }
+
+  /* Output area */
+  #console-output-container {
+    color: #F8F8F2;
+    height: 250px;           /* Set a fixed height */
+    overflow-y: auto;        /* Add a vertical scrollbar when needed */
+    margin: 0;
+    padding-bottom: 10px;
+    white-space: pre-wrap;   /* Wrap long lines */
+    word-wrap: break-word;
+  }
+
+  /* Hides the default scrollbar to replace with a custom one */
+  #console-output-container::-webkit-scrollbar {
+    width: 8px;
+  }
+  #console-output-container::-webkit-scrollbar-track {
+    background: #272822;
+  }
+  #console-output-container::-webkit-scrollbar-thumb {
+    background-color: #555;
+    border-radius: 4px;
+  }
+
+  /* Input area container */
+  #console-input-container {
+    display: flex;
+    align-items: center;
+  }
+
+  #prompt {
+    margin-right: 8px;
+    color: #a6e22e; /* Green prompt */
+  }
+
+  /* Text input field */
+  #userInput {
+    flex-grow: 1; /* Take up all available space */
+    background-color: transparent;
+    border: none;
+    color: #F8F8F2; /* Same as text color */
+    font-family: inherit;
+    font-size: 1em;
+    outline: none; /* Remove focus border */
+  }
+
+  /* Run button */
+  #run {
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 3px;
+    margin-left: 10px;
+  }
+  #run:hover {
+    background-color: #45a049;
+  }
