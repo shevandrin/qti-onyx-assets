@@ -355,8 +355,7 @@ input.addEventListener("keydown", function(evt) {
         } catch (e) {
           console.error("ESC interruption failed:", e);
         }
-
-        <!-- safeAppend("\nError: interrupted\n"); -->
+        
         scrollToBottom();
       }
 });
