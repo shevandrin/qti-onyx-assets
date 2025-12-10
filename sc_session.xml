@@ -338,6 +338,26 @@ input.addEventListener("keydown", function(evt) {
                 input.value = commandHistory[historyIndex];
             }
         }
+  } else if (evt.key === "Escape") {
+        console.log("Input : esc");
+        evt.preventDefault();
+
+        input.value = "";
+        historyIndex = commandHistory.length;
+
+        try {
+        // (1) Clear parser buffer by feeding a blank newline
+          webRConsole.stdin("\n");
+
+        // (2) Force a hard error inside R
+          webRConsole.stdin("stop('interrupted by ESC')\n");
+
+        } catch (e) {
+          console.error("ESC interruption failed:", e);
+        }
+
+        <!-- safeAppend("\nError: interrupted\n"); -->
+        scrollToBottom();
       }
 });
 
