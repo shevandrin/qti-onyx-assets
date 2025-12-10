@@ -1,0 +1,409 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE assessmentItem>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/qti/qtiv2p1/imsqti_v2p1.xsd" identifier="sc_session_v1_id" title="sc_session_v1" adaptive="false" timeDependent="false">
+  <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier">
+    <correctResponse>
+      <value>ChoiceA</value>
+    </correctResponse>
+  </responseDeclaration>
+  <responseDeclaration identifier="USERLOG" cardinality="single" baseType="string">]
+  </responseDeclaration>
+  <outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float">
+    <defaultValue>
+      <value>0</value>
+    </defaultValue>
+  </outcomeDeclaration>
+  <outcomeDeclaration identifier="MAXSCORE" cardinality="single" baseType="float">
+    <defaultValue>
+      <value>1</value>
+    </defaultValue>
+  </outcomeDeclaration>
+  <outcomeDeclaration identifier="MINSCORE" cardinality="single" baseType="float">
+    <defaultValue>
+      <value>0</value>
+    </defaultValue>
+  </outcomeDeclaration>
+  <!-- <stylesheet type="text/css" href="https://cdn.jsdelivr.net/gh/shevandrin/qti-onyx-assets/style.css"/> -->
+  <itemBody>
+
+<script type="module">
+(function() {
+  try {
+    // only inject once
+    if (window.__webr_styles_injected) return;
+    window.__webr_styles_injected = true;
+
+    // Inject stylesheet
+    var l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.type = 'text/css';
+    l.href = 'https://cdn.jsdelivr.net/gh/shevandrin/qti-onyx-assets/style.css';
+    document.head.appendChild(l);
+
+    <!-- // Optionally inject JS file (defer to load)
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/gh/USERNAME/REPO/path/console.js';
+    s.async = false;
+    document.head.appendChild(s); -->
+
+  } catch(e) {
+  }
+})();
+</script>
+
+  <div>
+  <h2>Question: pick up one of these options:</h2>
+  TODO:
+<ul>
+  <li>DONE find how to set unique name for sessions variables, using assessmenItem attributes</li>
+  <li>test it in test condition</li>
+  <li>DONE handle abort of expression with ESC key</li>
+  <li>DONE scroll down output area when new output is added</li>
+  <li>how to assign all values in JSON to hidden extended text interaction</li>
+  <li>test it with different types of questions (not only choiceInteraction)</li>
+  <li>optional: clean all sessions variables afte the answer on question is submitted (makes sense only for question level)</li>
+  <li>increse performance of loading/saving environment (maybe save only selected variables?)</li>
+  <li>Intergration into RQTI package</li>
+</ul>
+    <choiceInteraction responseIdentifier="RESPONSE" shuffle="true" maxChoices="1" orientation="vertical">
+      <simpleChoice identifier="ChoiceA">a</simpleChoice>
+      <simpleChoice identifier="ChoiceB">b</simpleChoice>
+    </choiceInteraction>
+	</div>
+
+<div id="show-id"></div>
+<div id="webRInteractions">
+  <pre id="console-output-container"><code id="out">&#8203;</code></pre>
+  <div id="console-input-container">
+    <span id="prompt">&gt;</span>
+    <input type="text" id="userInput" placeholder="Enter your R expression here"></input>
+    <button id="run" type="button">Run</button>
+  </div>
+</div>
+<script type="module">
+
+import { Console } from 'https://webr.r-wasm.org/latest/webr.mjs';
+
+const out = document.getElementById('out');
+const outContainer = document.getElementById('console-output-container');
+const commandHistory = [];
+let historyIndex = 0;
+
+function isWebRReady() {
+  try {
+    if (!webRConsole) return false;
+    if (!webRConsole.webR) return false;
+    if (typeof webRConsole.webR.evalR !== 'function') return false;
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+function scrollToBottom() {
+  if (outContainer) {
+    outContainer.scrollTop = outContainer.scrollHeight;
+  }
+}
+
+function safeAppend(text) {
+    if (out) {
+        out.textContent += text;
+    } else {
+        console.log("Output element not found");
+    }
+    scrollToBottom();
+}
+
+const webRConsole = new Console({
+  stdout: function(line) { safeAppend(line + "\n"); },
+  stderr: function(line) { safeAppend(line + "\n"); },
+  prompt: function(p) { safeAppend(p); }
+  },
+  {
+  RArgs: ['--quiet']
+});
+
+// FIND id
+const qid = document.querySelector('.item-container a[name]').getAttribute('name');
+(function() {
+  const showDiv = document.getElementById('show-id');
+  if (showDiv) showDiv.textContent = (typeof qid !== 'undefined',  qid !== null) ? qid : '';
+})();
+// Define environment storage KEYs
+const envKey = (typeof qid !== 'undefined', qid !== null) ? `webr_env_${qid}` : 'webr_env';
+const outKey = (typeof qid !== 'undefined', qid !== null) ? `webr_out_${qid}` : 'webr_out';
+
+
+// Start the console safely and mark readiness
+(async function startConsole() {
+  try {
+    const runRes = webRConsole.run();
+
+    // This works if runRes is a Promise, or returns undefined/non-promise.
+    await Promise.resolve(runRes);
+
+    var waitAttempts = 100;
+    while ((!isWebRReady(), waitAttempts)) {
+      await new Promise(function(r) { setTimeout(r, 100); });
+      waitAttempts = waitAttempts - 1;
+    }
+
+    console.log("Attempts", waitAttempts);
+
+    if (!isWebRReady()) {
+      throw new Error('webR did not initialize');
+    }
+
+    console.log("webR ready");
+    window.webRReady = true;
+
+    if(sessionStorage.getItem(envKey)) {
+      console.log("Found saved environment; loading...");
+      await loadEnvironment();
+    } else {
+      console.log("No saved environment found");
+    }
+
+    var consoleDiv = document.getElementById("webRInteractions");
+    if (consoleDiv) consoleDiv.style.display = 'block';
+
+
+  } catch (err) {
+    console.error("Error starting webRConsole:", err);
+  }
+   scrollToBottom();
+})();
+
+// SAVE  ENV //
+async function saveEnvironment() {
+  if (!window.webRReady) {
+    console.error("webR not ready; cannot save environment yet");
+    return;
+  }
+
+  if (!webRConsole || !webRConsole.webR || typeof webRConsole.webR.evalR !== 'function') {
+    console.error("webR not available; cannot save environment");
+    return;
+  }
+
+  try {
+    const result = await webRConsole.webR.evalR("serialize(mget(ls()), connection = NULL)", {
+      captureRObject: true
+    });
+    console.log(result);
+
+    if (!result || typeof result.toTypedArray !== 'function') {
+      console.error("Unexpected result from evalR; cannot convert to byte array", result);
+      return;
+    }
+
+    const bytes = await result.toTypedArray();
+    const base64 = btoa(String.fromCharCode(...bytes));
+    sessionStorage.setItem(envKey, base64);
+    console.log("R environment saved to sessionStorage");
+
+    // save console output snapshot
+    try {
+      saveConsoleOutput();
+    } catch (e) {
+      console.error("Failed to save console output after env save:", e);
+    }
+
+  } catch (err) {
+    console.error("Failed to save R environment:", err);
+  }
+}
+
+// SAVE CONSOLE OUTPUT
+function saveConsoleOutput() {
+  try {
+    var text = '';
+    if ((typeof out !== 'undefined') ? (out ? out.textContent : false) : false) {
+      text = out.textContent;
+    }
+    sessionStorage.setItem(outKey, text);
+    // optional: small debug
+    // console.log('Console output saved, length=', text.length);
+  } catch (err) {
+    console.error('Failed to save console output:', err);
+  }
+}
+
+// LOAD ENV //
+// Load saved environment from sessionStorage and restore into .GlobalEnv
+async function loadEnvironment() {
+  if (!window.webRReady) {
+    console.error("webR not ready; cannot load environment yet");
+    return;
+  }
+
+  const base64 = sessionStorage.getItem(envKey);
+  if (!base64) {
+    console.error("No saved environment found in sessionStorage (webr_env)");
+    return;
+  }
+
+  try {
+    const binary = atob(base64);
+
+    const bytes = Uint8Array.from(binary, function(c) {
+    return c.charCodeAt(0);
+    });
+
+    const rRaw = 'c(' + bytes.join(',') + ')';
+
+    const rCode = 
+      "local({" +
+        "tmp = unserialize(as.raw(" + rRaw + "));" +
+          "list2env(tmp, envir = .GlobalEnv);" +
+    "})";
+
+    console.log(rCode);
+
+    await webRConsole.webR.evalR(rCode);
+
+    console.log("R environment loaded from sessionStorage");
+
+  } catch (err) {
+    console.error("Failed to load R environment:", err);
+  }
+
+// restore console output after environment load completes
+  try {
+    loadConsoleOutput();
+  } catch (e) {
+    console.error('Failed to restore console output after env load:', e);
+  }
+
+console.log(base64);
+const binary = atob(base64);
+console.log(binary);  
+
+}
+
+// LOAD CONSOLE OUTPUT
+function loadConsoleOutput() {
+  try {
+    var saved = sessionStorage.getItem(outKey);
+    if (!(saved === null || typeof out === 'undefined' || !out)) {
+      out.textContent = saved;
+      scrollToBottom();
+      // optional: debug
+      // console.log('Console output restored, length=', saved.length);
+    }
+  } catch (err) {
+    console.error('Failed to load console output:', err);
+  }
+}
+
+var input = document.getElementById("userInput");
+
+globalThis.sendInput = function() {
+  const value = input.value;
+  if (value.trim() === "") return;
+  webRConsole.stdin(input.value);
+  out.textContent += input.value + "\n";
+  input.value = "";
+  if (commandHistory[commandHistory.length - 1] !== value) {
+    commandHistory.push(value);
+  }
+  historyIndex = commandHistory.length;
+
+  // save webr_env to sessionStorage after each command
+  setTimeout(function() {
+    saveEnvironment().catch(function(err) {
+      console.error("Auto-save failed:", err);
+    });
+  }, 200);
+};
+
+input.addEventListener("keydown", function(evt) {
+  if (evt.keyCode === 13) {
+    globalThis.sendInput();
+  } else if (evt.key === "ArrowUp") {
+    evt.preventDefault();
+    if (historyIndex !== 0) {
+      historyIndex--;
+      input.value = commandHistory[historyIndex];
+    }
+  } else if (evt.key === "ArrowDown") {
+        evt.preventDefault();
+        if (historyIndex !== commandHistory.length) {
+            historyIndex++;
+            if (historyIndex === commandHistory.length) {
+                input.value = "";
+            } else {
+                input.value = commandHistory[historyIndex];
+            }
+        }
+  } else if (evt.key === "Escape") {
+        console.log("Input : esc");
+        evt.preventDefault();
+
+        input.value = "";
+        historyIndex = commandHistory.length;
+
+        try {
+          webRConsole.stdin("\n");
+          webRConsole.stdin("stop('interrupted by ESC')\n");
+
+        } catch (e) {
+          console.error("ESC interruption failed:", e);
+        }
+        
+        scrollToBottom();
+      }
+});
+
+document.getElementById('run').addEventListener('click', globalThis.sendInput);
+
+document.addEventListener("DOMContentLoaded", function() {
+  var consoleDiv = document.getElementById("webRInteractions");
+  const itemContent = document.querySelector(".item-content");
+  itemContent.appendChild(consoleDiv);
+});
+
+</script>
+</itemBody>
+  <responseProcessing>
+    <responseCondition>
+      <responseIf>
+        <isNull>
+          <variable identifier="RESPONSE"/>
+        </isNull>
+      </responseIf>
+      <responseElseIf>
+        <match>
+          <variable identifier="RESPONSE"/>
+          <correct identifier="RESPONSE"/>
+        </match>
+        <setOutcomeValue identifier="SCORE">
+          <variable identifier="MAXSCORE"/>
+        </setOutcomeValue>
+      </responseElseIf>
+    </responseCondition>
+    <responseCondition>
+      <responseIf>
+        <gt>
+          <variable identifier="SCORE"/>
+          <variable identifier="MAXSCORE"/>
+        </gt>
+        <setOutcomeValue identifier="SCORE">
+          <variable identifier="MAXSCORE"/>
+        </setOutcomeValue>
+      </responseIf>
+    </responseCondition>
+    <responseCondition>
+      <responseIf>
+        <lt>
+          <variable identifier="SCORE"/>
+          <variable identifier="MINSCORE"/>
+        </lt>
+        <setOutcomeValue identifier="SCORE">
+          <variable identifier="MINSCORE"/>
+        </setOutcomeValue>
+      </responseIf>
+    </responseCondition>
+  </responseProcessing>
+</assessmentItem>
