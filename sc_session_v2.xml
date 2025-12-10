@@ -144,18 +144,24 @@ const outKey = (typeof qid !== 'undefined', qid !== null) ? `webr_out_${qid}` : 
     await Promise.resolve(runRes);
 
     var waitAttempts = 100;
-    while ((!isWebRReady(), waitAttempts)) {
+    while (true) {
+
+      if (isWebRReady()) {
+        break;
+      }
+
+      if (!waitAttempts) {
+        break;
+      }
+
       await new Promise(function(r) { setTimeout(r, 100); });
       waitAttempts = waitAttempts - 1;
     }
-
-    console.log("Attempts", waitAttempts);
 
     if (!isWebRReady()) {
       throw new Error('webR did not initialize');
     }
 
-    console.log("webR ready");
     window.webRReady = true;
 
     if(sessionStorage.getItem(envKey)) {
