@@ -88,16 +88,28 @@ const out = document.getElementById('out');
 const outContainer = document.getElementById('console-output-container');
 const commandHistory = [];
 let historyIndex = 0;
+let realWebRReady = false;
 
-function isWebRReady() {
-  try {
-    if (!webRConsole) return false;
-    if (!webRConsole.webR) return false;
-    if (typeof webRConsole.webR.evalR !== 'function') return false;
-    return true;
-  } catch (err) {
-    return false;
+async function waitUntilRWorks() {
+  // this funciton pings R until it response correclty
+  var attempts = 100;
+
+  while (attempts != 0) {
+    try {
+      const res = await webRConsole.webR.evalR("1+1");
+      if (res) {
+        console.log("R console is responding correctly");
+        return true;
+      }
+    } catch (e) {
+      // R not ready yet
+    }
+
+    await new Promise(function(r) { setTimeout(r, 100); });
+    attempts = attempts - 1;
   }
+
+  return false;
 }
 
 function scrollToBottom() {
@@ -139,27 +151,18 @@ const outKey = (typeof qid !== 'undefined', qid !== null) ? `webr_out_${qid}` : 
 (async function startConsole() {
   try {
     const runRes = webRConsole.run();
-
-    // This works if runRes is a Promise, or returns undefined/non-promise.
     await Promise.resolve(runRes);
+    
+    realWebRReady = await waitUntilRWorks();
 
     var waitAttempts = 100;
     while (true) {
 
-      if (isWebRReady()) {
-        break;
-      }
-
-      if (!waitAttempts) {
-        break;
-      }
+      if (realWebRReady) break;
+      if (!waitAttempts) break;
 
       await new Promise(function(r) { setTimeout(r, 100); });
       waitAttempts = waitAttempts - 1;
-    }
-
-    if (!isWebRReady()) {
-      throw new Error('webR did not initialize');
     }
 
     window.webRReady = true;
@@ -197,7 +200,6 @@ async function saveEnvironment() {
     const result = await webRConsole.webR.evalR("serialize(mget(ls()), connection = NULL)", {
       captureRObject: true
     });
-    console.log(result);
 
     if (!result || typeof result.toTypedArray !== 'function') {
       console.error("Unexpected result from evalR; cannot convert to byte array", result);
@@ -229,8 +231,6 @@ function saveConsoleOutput() {
       text = out.textContent;
     }
     sessionStorage.setItem(outKey, text);
-    // optional: small debug
-    // console.log('Console output saved, length=', text.length);
   } catch (err) {
     console.error('Failed to save console output:', err);
   }
@@ -264,8 +264,8 @@ async function loadEnvironment() {
         "tmp = unserialize(as.raw(" + rRaw + "));" +
           "list2env(tmp, envir = .GlobalEnv);" +
     "})";
-
-    console.log(rCode);
+    // uncomment to see R code, that loads the environment
+    // console.log(rCode);
 
     await webRConsole.webR.evalR(rCode);
 
@@ -282,9 +282,7 @@ async function loadEnvironment() {
     console.error('Failed to restore console output after env load:', e);
   }
 
-console.log(base64);
 const binary = atob(base64);
-console.log(binary);  
 
 }
 
@@ -295,8 +293,6 @@ function loadConsoleOutput() {
     if (!(saved === null || typeof out === 'undefined' || !out)) {
       out.textContent = saved;
       scrollToBottom();
-      // optional: debug
-      // console.log('Console output restored, length=', saved.length);
     }
   } catch (err) {
     console.error('Failed to load console output:', err);
@@ -344,7 +340,6 @@ input.addEventListener("keydown", function(evt) {
             }
         }
   } else if (evt.key === "Escape") {
-        console.log("Input : esc");
         evt.preventDefault();
 
         input.value = "";
