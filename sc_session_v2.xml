@@ -62,7 +62,7 @@
   <li>how to assign all values in JSON to hidden extended text interaction</li>
   <li>test it with different types of questions (not only choiceInteraction)</li>
   <li>optional: clean all sessions variables afte the answer on question is submitted (makes sense only for question level)</li>
-  <li>increse performance of loading/saving environment (maybe save only selected variables?)</li>
+  <li>DONE increse performance of loading/saving environment (maybe save only selected variables?)</li>
   <li>Intergration into RQTI package</li>
 </ul>
     <choiceInteraction responseIdentifier="RESPONSE" shuffle="true" maxChoices="1" orientation="vertical">
