@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE assessmentItem>
-<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/qti/qtiv2p1/imsqti_v2p1.xsd" identifier="sc_dummy_identifier" title="sc_dummy_session_title" adaptive="false" timeDependent="false">
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/qti/qtiv2p1/imsqti_v2p1.xsd" identifier="sc_session_v1_id" title="sc_session_v1" adaptive="false" timeDependent="false">
   <responseDeclaration identifier="RESPONSE" cardinality="single" baseType="identifier">
     <correctResponse>
       <value>ChoiceA</value>
@@ -78,8 +78,6 @@
     <span id="prompt">&gt;</span>
     <input type="text" id="userInput" placeholder="Enter your R expression here"></input>
     <button id="run" type="button">Run</button>
-    <!-- <button id="save-env" type="button">Save Session</button>
-    <button id="load-env" type="button">Load Session</button> -->
   </div>
 </div>
 <script type="module">
@@ -347,10 +345,7 @@ input.addEventListener("keydown", function(evt) {
         historyIndex = commandHistory.length;
 
         try {
-        // (1) Clear parser buffer by feeding a blank newline
           webRConsole.stdin("\n");
-
-        // (2) Force a hard error inside R
           webRConsole.stdin("stop('interrupted by ESC')\n");
 
         } catch (e) {
@@ -362,8 +357,6 @@ input.addEventListener("keydown", function(evt) {
 });
 
 document.getElementById('run').addEventListener('click', globalThis.sendInput);
-<!-- document.getElementById('save-env').addEventListener('click', saveEnvironment);
-document.getElementById('load-env').addEventListener('click', loadEnvironment); -->
 
 document.addEventListener("DOMContentLoaded", function() {
   var consoleDiv = document.getElementById("webRInteractions");
