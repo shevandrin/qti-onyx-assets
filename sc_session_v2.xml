@@ -60,6 +60,7 @@
   <li>DONE handle abort of expression with ESC key</li>
   <li>DONE scroll down output area when new output is added</li>
   <li>TO FIX: R console has to be showd at the end</li>
+  <li>Optional: store last command in session variable to recall it with UP/DOWN arrows after reloading the question</li>
   <li>how to assign all values in JSON to hidden extended text interaction</li>
   <li>test it with different types of questions (not only choiceInteraction)</li>
   <li>optional: clean all sessions variables afte the answer on question is submitted (makes sense only for question level)</li>
