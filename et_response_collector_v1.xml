@@ -29,6 +29,7 @@
 			<li>Make it hidden</li>
 		</ul>
 		<extendedTextInteraction responseIdentifier="RESPONSE" expectedLength="200"/>
+    
     <script type="module">
     (function() {
         try {
@@ -44,8 +45,8 @@
         } catch(e) {
         }
     })();
-
-
+    </script>
+    <script type="module">
     Wicket.Event.add(window, "domready", function() {
     console.log("ET Response Collector script started");
 
