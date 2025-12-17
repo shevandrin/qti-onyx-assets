@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<assessmentItem xmlns="http://www.imsglobal.org/xsd/imsqti_v2p1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsglobal.org/xsd/imsqti_v2p1 http://www.imsglobal.org/xsd/qti/qtiv2p1/imsqti_v2p1p1.xsd http://www.w3.org/1998/Math/MathML http://www.w3.org/Math/XMLSchema/mathml2/mathml2.xsd" identifier="et_response_collector_V1_id" title="et_response_collector_v1" adaptive="false" timeDependent="false">
+	<responseDeclaration identifier="RESPONSE" cardinality="single" baseType="string"/>
+	<outcomeDeclaration identifier="SCORE" cardinality="single" baseType="float">
+		<defaultValue>
+			<value>0</value>
+		</defaultValue>
+	</outcomeDeclaration>
+	<outcomeDeclaration identifier="MAXSCORE" cardinality="single" baseType="float">
+		<defaultValue>
+			<value>0</value>
+		</defaultValue>
+	</outcomeDeclaration>
+	<outcomeDeclaration identifier="MINSCORE" cardinality="single" baseType="float" view="testConstructor">
+		<defaultValue>
+			<value>0</value>
+		</defaultValue>
+	</outcomeDeclaration>
+	<itemBody>
+		<h2>It has to be hidden extended text entry interaction to collect all session variables with students' inputs in web R console:</h2>
+		<p>TODO:</p>
+		<ul>
+			<li>create normal functional extendedTextEntryInteraction question</li>
+            <li>find diff between item and test (iframe?)</li>
+            <li>find candidate for test id to make test specific session var</li>
+            <li>if test: set test session variable</li>
+			<li>draw overall process flow</li>
+			<li>Put session variables with students' inputs into response variable</li>
+			<li>Make it hidden</li>
+		</ul>
+		<extendedTextInteraction responseIdentifier="RESPONSE" expectedLength="200"/>
+    <script type="module">
+    (function() {
+        try {
+        // only inject once
+            if (window.__webr_styles_injected) return;
+            window.__webr_styles_injected = true;
+
+        var s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/gh/shevandrin/qti-onyx-assets/get_test_navtree_id.js';
+        s.async = false;
+        document.head.appendChild(s);
+
+        } catch(e) {
+        }
+    })();
+
+
+    Wicket.Event.add(window, "domready", function() {
+    console.log("ET Response Collector script started");
+
+
+
+    const navTreeId = findNavTreeId(document);
+    console.log("navtree id:", navTreeId);
+
+
+    // 1. Find the collector textarea (ONYX renders only one in this question)
+    var textareas = document.getElementsByTagName("textarea");
+    if (!textareas || textareas.length === 0) {
+        console.error("No textarea found for log collector");
+        return;
+    }
+    var field = textareas[0];
+
+    // 2. Build final log string from sessionStorage entries
+    var fullLog = "";
+    var length = sessionStorage.length;
+    var i = 0;
+
+    console.log("the numbe of keys in sessionStorage: " + length);
+    while (i != length) {
+        var key = sessionStorage.key(i);
+        console.log("checking sessionStorage key: " + key);
+
+        // MATCH ONLY session vars that begin with "webr_out_"
+        if (key) {
+          console.log(key.indexOf("webr_out_"));
+            if (key.indexOf("webr_out_") === 0) {
+                fullLog += "### " + key + "\n";
+                var value = sessionStorage.getItem(key);
+                if (value) {
+                    fullLog += value + "\n\n";
+                }
+            }
+        }
+
+        i = i + 1;
+    }
+
+    // 3. Write merged logs into the textarea
+    field.value = fullLog;
+
+    // 4. Trigger ONYX validation on this field (important!)
+    try {
+        if (typeof field.onkeyup === "function") {
+            field.onkeyup();
+        }
+    } catch (e) {
+        console.error("Could not trigger ONYX validator", e);
+    }
+});
+    </script>
+	</itemBody>
+</assessmentItem>
