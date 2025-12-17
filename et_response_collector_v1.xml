@@ -20,41 +20,53 @@
 		<h2>It has to be hidden extended text entry interaction to collect all session variables with students' inputs in web R console:</h2>
 		<p>TODO:</p>
 		<ul>
-			<li>create normal functional extendedTextEntryInteraction question</li>
-            <li>find diff between item and test (iframe?)</li>
-            <li>find candidate for test id to make test specific session var</li>
-            <li>if test: set test session variable</li>
+			<li>DONE: create normal functional extendedTextEntryInteraction question</li>
+            <li>DONE but NO NEED so far: find candidate for test id to make test specific session var</li>
 			<li>draw overall process flow</li>
-			<li>Put session variables with students' inputs into response variable</li>
-			<li>Make it hidden</li>
+			<li>DONE: Put session variables with students' inputs into response variable</li>
+			<li>DONE: Make it hidden</li>
 		</ul>
 		<extendedTextInteraction responseIdentifier="RESPONSE" expectedLength="200"/>
     
     <script type="module">
-    (function() {
+    function hideInteractionContainer() {
         try {
-        // only inject once
-            if (window.__webr_styles_injected) return;
-            window.__webr_styles_injected = true;
+            var xpath = "//span[@class='interaction-container']";
+            var result = document.evaluate(
+                xpath,
+                document,
+                null,
+                XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+                null
+            );
 
-        var s = document.createElement('script');
-        s.src = 'https://cdn.jsdelivr.net/gh/shevandrin/qti-onyx-assets/get_test_navtree_id.js';
-        s.async = false;
-        document.head.appendChild(s);
+            var j = 0;
+            while (j != result.snapshotLength) {
+                var el = result.snapshotItem(j);
+                if (el) {
+                    // to hide set none
+                    el.style.display = "none";
+                }
+                j = j + 1;
+            }
+        } catch (e) {}
+    }
 
-        } catch(e) {
-        }
-    })();
-    </script>
-    <script type="module">
     Wicket.Event.add(window, "domready", function() {
     console.log("ET Response Collector script started");
 
-
-
-    const navTreeId = findNavTreeId(document);
-    console.log("navtree id:", navTreeId);
-
+    // 0. Hide the interaction container to make this question invisible
+    hideInteractionContainer();
+    // Wicket AJAX hook
+    if (Wicket) {
+        if (Wicket.Event) {
+            if (Wicket.Event.subscribe == "function") {
+                Wicket.Event.subscribe("/ajax/call/complete", function() {
+                    hideInteractionContainer();
+                });
+            }
+        }
+    }
 
     // 1. Find the collector textarea (ONYX renders only one in this question)
     var textareas = document.getElementsByTagName("textarea");
